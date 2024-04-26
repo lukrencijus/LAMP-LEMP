@@ -46,3 +46,24 @@ cd ..
 cd /opt/apache24/bin
 sudo ./apachectl -k start
 curl http://localhost
+
+
+
+wget https://www.php.net/distributions/php-8.3.6.tar.gz
+tar -xf php-8.3.6.tar.gz
+cd php-8.3.6
+sudo ./configure --prefix=/opt/apache24 --with-apxs2=/opt/apache24/bin/apxs
+sudo make -j4
+sudo make -j4 install
+cd ..
+
+
+
+git clone --depth 1 --single-branch --branch 10.11 https://github.com/MariaDB/server.git
+cd server
+mkdir build-mariadb-server-debug
+cd build-mariadb-server-debug
+sudo apt-get install cmake -y
+sudo cmake .. -DCMAKE_INSTALL_PREFIX=/opt/mariadb
+sudo cmake --build . --parallel 5
+cmake --install . --parallel 5
