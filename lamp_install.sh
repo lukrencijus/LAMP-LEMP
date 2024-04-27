@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 
-#sudo apt-get update
-#sudo apt install git -y
-#git clone https://git.mif.vu.lt/luse0397/lamp_install.git
-#cd lamp_install
-#chmod +rwx lamp_install.sh
-#./lamp_install.sh -y
+start_dir=$(pwd)
 
 sudo apt-get update
 sudo apt-get install build-essential -y
+sudo apt-get install -y git gcc g++ autoconf libtool-bin libexpat1 libexpat1-dev libpcre2-dev libncurses-dev libgnutls28-dev libbison-dev libsqlite3-dev re2c zlib1g-dev texinfo gettext automake autopoint
+sudo apt-get install -y make libssl-dev libpcre3 libpcre3-dev libapr1-dev libaprutil1-dev pkg-config libncurses5-dev bison ccache libxml2-dev libapr1 expat
+
+
+
 wget https://dlcdn.apache.org/httpd/httpd-2.4.59.tar.gz
 wget https://dlcdn.apache.org//apr/apr-1.7.4.tar.gz
 wget https://dlcdn.apache.org//apr/apr-util-1.6.3.tar.gz
@@ -19,43 +19,44 @@ tar -xf httpd-2.4.59.tar.gz
 tar -xf pcre2-10.43.tar.gz
 
 cd apr-1.7.4/
-./configure --prefix=/opt/apache24/apr
-sudo make
-sudo make install
-cd ..
+sudo ./configure --prefix=/opt/apache/apr
+sudo make -j4
+sudo make -j4 install
+cd "$start_dir"
 
 cd apr-util-1.6.3/
-./configure --prefix=/opt/apache24/apr-util --with-apr=/opt/apache24/apr
-sudo apt-get install libexpat1-dev
-sudo make
-sudo make install
-cd ..
+sudo ./configure --prefix=/opt/apache/apr-util --with-apr=/opt/apache/apr
+sudo make -j4
+sudo make -j4 install
+cd "$start_dir"
 
 cd pcre2-10.43
-./configure --prefix=/opt/apache24/pcre
-sudo make
-sudo make install
-cd ..
+sudo ./configure --prefix=/opt/apache/pcre
+sudo make -j4
+sudo make -j4 install
+cd "$start_dir"
 
 cd httpd-2.4.59
-./configure --prefix=/opt/apache24/apache --with-apr=/opt/apache24/apr --with-apr-util=/opt/apache24/apr-util --with-pcre=/opt/apache24/pcre/bin/pcre2-config
-sudo make
-sudo make install
-cd ..
+sudo ./configure --prefix=/opt/apache/apache --with-apr=/opt/apache/apr --with-apr-util=/opt/apache/apr-util --with-pcre=/opt/apache/pcre/bin/pcre2-config
+sudo make -j4
+sudo make -j4 install
+cd "$start_dir"
 
-cd /opt/apache24/bin
+cd /opt/apache/apache/bin
 sudo ./apachectl -k start
 curl http://localhost
+sleep 3s
+cd "$start_dir"
 
 
 
 wget https://www.php.net/distributions/php-8.3.6.tar.gz
 tar -xf php-8.3.6.tar.gz
 cd php-8.3.6
-sudo ./configure --prefix=/opt/apache24 --with-apxs2=/opt/apache24/bin/apxs
+sudo ./configure --prefix=/opt/php --with-apxs2=/opt/apache/apache/bin/apxs
 sudo make -j4
 sudo make -j4 install
-cd ..
+cd "$start_dir"
 
 
 
@@ -66,4 +67,5 @@ cd build-mariadb-server-debug
 sudo apt-get install cmake -y
 sudo cmake .. -DCMAKE_INSTALL_PREFIX=/opt/mariadb
 sudo cmake --build . --parallel 5
-cmake --install . --parallel 5
+sudo cmake --install .
+cd "$start_dir"
