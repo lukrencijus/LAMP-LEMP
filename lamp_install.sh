@@ -3,9 +3,11 @@
 start_dir=$(pwd)
 
 sudo apt-get update
+sudo apt upgrade -y
 sudo apt-get install build-essential -y
 sudo apt-get install -y git gcc g++ autoconf libtool-bin libexpat1 libexpat1-dev libpcre2-dev libncurses-dev libgnutls28-dev libbison-dev libsqlite3-dev re2c zlib1g-dev texinfo gettext automake autopoint
 sudo apt-get install -y make libssl-dev libpcre3 libpcre3-dev libapr1-dev libaprutil1-dev pkg-config libncurses5-dev bison ccache libxml2-dev libapr1 expat
+sudo apt-get install -y curl wget tar cmake
 
 
 
@@ -44,8 +46,6 @@ cd "$start_dir"
 
 cd /opt/apache/apache/bin
 sudo ./apachectl -k start
-curl http://localhost
-sleep 3s
 cd "$start_dir"
 
 
@@ -64,8 +64,25 @@ git clone --depth 1 --single-branch --branch 10.11 https://github.com/MariaDB/se
 cd server
 mkdir build-mariadb-server-debug
 cd build-mariadb-server-debug
-sudo apt-get install cmake -y
 sudo cmake .. -DCMAKE_INSTALL_PREFIX=/opt/mariadb
-sudo cmake --build . --parallel 5
+sudo cmake --build . --parallel 4
 sudo cmake --install .
 cd "$start_dir"
+
+sudo groupadd mysql
+sudo useradd -g mysql mysql
+sudo chown -R mysql:mysql /opt/mariadb
+sudo echo "[mysqld]
+datadir=/opt/mariadb/data/" > ./my.cnf
+sudo chmod +rwx my.cnf
+sudo mv ./my.cnf /opt/mariadb
+sudo /opt/mariadb/scripts/mysql_install_db --user=mysql
+sudo /opt/mariadb/bin/mariadbd-safe --user=mysql &
+
+
+
+sudo /opt/apache/apache/bin/apachectl -v
+sudo curl http://localhost
+sudo /opt/php/bin/php -v
+sudo /opt/mariadb/bin/mariadb -V
+sudo /opt/mariadb/bin/mariadb-admin ping
