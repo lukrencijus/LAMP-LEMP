@@ -72,10 +72,10 @@ cd "$start_dir"
 sudo groupadd mysql
 sudo useradd -g mysql mysql
 sudo chown -R mysql:mysql /opt/mariadb
-sudo echo "[mysqld]
+sudo echo "[mysql]
 datadir=/opt/mariadb/data/" > ./my.cnf
 sudo chmod +rwx my.cnf
-sudo mv ./my.cnf /opt/mariadb
+sudo mv ./my.cnf /etc
 sudo /opt/mariadb/scripts/mysql_install_db --user=mysql
 sudo /opt/mariadb/bin/mariadbd-safe --user=mysql &
 
