@@ -90,4 +90,6 @@ sudo /opt/php/bin/php -v
 echo
 sudo /opt/mariadb/bin/mariadb -V
 echo
-sudo /opt/mariadb/bin/mariadb-admin ping
+cd /opt/mariadb/bin
+sudo ./mariadb-admin ping
+cd "$start_dir"
