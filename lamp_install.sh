@@ -91,5 +91,6 @@ echo
 sudo /opt/mariadb/bin/mariadb -V
 echo
 cd /opt/mariadb/bin
+sleep 5s
 sudo ./mariadb-admin ping
 cd "$start_dir"
