@@ -72,7 +72,7 @@ cd "$start_dir"
 sudo groupadd mysql
 sudo useradd -g mysql mysql
 sudo chown -R mysql:mysql /opt/mariadb
-sudo echo "[mysql]
+sudo echo "[mariadb]
 datadir=/opt/mariadb/data/" > ./my.cnf
 sudo chmod +rwx my.cnf
 sudo mv ./my.cnf /etc
@@ -81,6 +81,7 @@ sudo /opt/mariadb/bin/mariadbd-safe --user=mysql &
 
 
 
+echo
 sudo /opt/apache/apache/bin/apachectl -v
 sudo curl http://localhost
 sudo /opt/php/bin/php -v
