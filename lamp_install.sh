@@ -83,7 +83,11 @@ sudo /opt/mariadb/bin/mariadbd-safe --user=mysql &
 
 echo
 sudo /opt/apache/apache/bin/apachectl -v
+echo
 sudo curl http://localhost
+echo
 sudo /opt/php/bin/php -v
+echo
 sudo /opt/mariadb/bin/mariadb -V
+echo
 sudo /opt/mariadb/bin/mariadb-admin ping
