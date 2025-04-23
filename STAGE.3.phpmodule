@@ -1,0 +1,5 @@
+/opt/apache/apache/modules/libphp.so
+configurations: 
+<FilesMatch "\.(cgi|shtml|phtml|php)$">
+<FilesMatch "\.(cgi|shtml|phtml|php)$">
+LoadModule php_module         modules/libphp.so

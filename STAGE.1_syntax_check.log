@@ -1,0 +1,144 @@
+
+In /users3////gitREPO/luse0397/task2/lamp_install.sh line 23:
+cd apr-1.7.4/
+^-----------^ SC2164 (warning): Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
+
+Did you mean: 
+cd apr-1.7.4/ || exit
+
+
+In /users3////gitREPO/luse0397/task2/lamp_install.sh line 27:
+cd "$start_dir"
+^-------------^ SC2164 (warning): Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
+
+Did you mean: 
+cd "$start_dir" || exit
+
+
+In /users3////gitREPO/luse0397/task2/lamp_install.sh line 29:
+cd apr-util-1.6.3/
+^----------------^ SC2164 (warning): Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
+
+Did you mean: 
+cd apr-util-1.6.3/ || exit
+
+
+In /users3////gitREPO/luse0397/task2/lamp_install.sh line 33:
+cd "$start_dir"
+^-------------^ SC2164 (warning): Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
+
+Did you mean: 
+cd "$start_dir" || exit
+
+
+In /users3////gitREPO/luse0397/task2/lamp_install.sh line 35:
+cd pcre2-10.43
+^------------^ SC2164 (warning): Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
+
+Did you mean: 
+cd pcre2-10.43 || exit
+
+
+In /users3////gitREPO/luse0397/task2/lamp_install.sh line 39:
+cd "$start_dir"
+^-------------^ SC2164 (warning): Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
+
+Did you mean: 
+cd "$start_dir" || exit
+
+
+In /users3////gitREPO/luse0397/task2/lamp_install.sh line 41:
+cd httpd-2.4.59
+^-------------^ SC2164 (warning): Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
+
+Did you mean: 
+cd httpd-2.4.59 || exit
+
+
+In /users3////gitREPO/luse0397/task2/lamp_install.sh line 45:
+cd "$start_dir"
+^-------------^ SC2164 (warning): Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
+
+Did you mean: 
+cd "$start_dir" || exit
+
+
+In /users3////gitREPO/luse0397/task2/lamp_install.sh line 47:
+cd /opt/apache/apache/bin
+^-----------------------^ SC2164 (warning): Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
+
+Did you mean: 
+cd /opt/apache/apache/bin || exit
+
+
+In /users3////gitREPO/luse0397/task2/lamp_install.sh line 49:
+cd "$start_dir"
+^-------------^ SC2164 (warning): Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
+
+Did you mean: 
+cd "$start_dir" || exit
+
+
+In /users3////gitREPO/luse0397/task2/lamp_install.sh line 55:
+cd php-8.3.6
+^----------^ SC2164 (warning): Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
+
+Did you mean: 
+cd php-8.3.6 || exit
+
+
+In /users3////gitREPO/luse0397/task2/lamp_install.sh line 59:
+cd "$start_dir"
+^-------------^ SC2164 (warning): Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
+
+Did you mean: 
+cd "$start_dir" || exit
+
+
+In /users3////gitREPO/luse0397/task2/lamp_install.sh line 64:
+cd server
+^-------^ SC2164 (warning): Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
+
+Did you mean: 
+cd server || exit
+
+
+In /users3////gitREPO/luse0397/task2/lamp_install.sh line 66:
+cd build-mariadb-server-debug
+^---------------------------^ SC2164 (warning): Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
+
+Did you mean: 
+cd build-mariadb-server-debug || exit
+
+
+In /users3////gitREPO/luse0397/task2/lamp_install.sh line 70:
+cd "$start_dir"
+^-------------^ SC2164 (warning): Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
+
+Did you mean: 
+cd "$start_dir" || exit
+
+
+In /users3////gitREPO/luse0397/task2/lamp_install.sh line 76:
+datadir=/opt/mariadb/data/" > ./my.cnf
+                            ^-- SC2024 (warning): sudo doesn't affect redirects. Use ..| sudo tee file
+
+
+In /users3////gitREPO/luse0397/task2/lamp_install.sh line 93:
+cd /opt/mariadb/bin
+^-----------------^ SC2164 (warning): Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
+
+Did you mean: 
+cd /opt/mariadb/bin || exit
+
+
+In /users3////gitREPO/luse0397/task2/lamp_install.sh line 96:
+cd "$start_dir"
+^-------------^ SC2164 (warning): Use 'cd ... || exit' or 'cd ... || return' in case cd fails.
+
+Did you mean: 
+cd "$start_dir" || exit
+
+For more information:
+  https://www.shellcheck.net/wiki/SC2024 -- sudo doesn't affect redirects. Us...
+  https://www.shellcheck.net/wiki/SC2164 -- Use 'cd ... || exit' or 'cd ... |...

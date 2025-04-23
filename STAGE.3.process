@@ -1,0 +1,10 @@
+MariaDB/Mysql procs
+root      168365  0.0  0.0  17552  7040 ?        S    15:53   0:00 sudo /opt/mariadb/bin/mariadbd-safe --user=mysql
+root      168367  0.0  0.0  17552  2504 pts/3    Ss+  15:53   0:00 sudo /opt/mariadb/bin/mariadbd-safe --user=mysql
+root      168368  0.0  0.0   2800  1920 pts/3    S    15:53   0:00 /bin/sh /opt/mariadb/bin/mariadbd-safe --user=mysql
+mysql     168456  0.0  0.8 1337900 100012 pts/3  Sl   15:53   0:00 /opt/mariadb/bin/mariadbd --basedir=/opt/mariadb --datadir=/opt/mariadb/data/ --plugin-dir=/opt/mariadb/lib/plugin --user=mysql --log-error=/opt/mariadb/data//luse0397.err --pid-file=luse0397.pid
+Apache service procs
+root       55011  0.0  0.0   5976  3952 ?        Ss   15:12   0:00 /opt/apache/apache/bin/httpd -k start
+daemon     55012  0.0  0.0 1998272 4852 ?        Sl   15:12   0:00 /opt/apache/apache/bin/httpd -k start
+daemon     55014  0.0  0.0 1932736 4852 ?        Sl   15:12   0:00 /opt/apache/apache/bin/httpd -k start
+daemon     55015  0.0  0.0 1998272 5492 ?        Sl   15:12   0:00 /opt/apache/apache/bin/httpd -k start

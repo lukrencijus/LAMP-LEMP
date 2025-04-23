@@ -1,0 +1,31 @@
+/opt/
+├── apache
+│   ├── apache
+│   ├── apr
+│   ├── apr-util
+│   └── pcre
+├── mariadb
+│   ├── COPYING
+│   ├── CREDITS
+│   ├── INSTALL-BINARY
+│   ├── README-wsrep
+│   ├── README.md
+│   ├── THIRDPARTY
+│   ├── bin
+│   ├── data
+│   ├── include
+│   ├── lib
+│   ├── man
+│   ├── mysql-test
+│   ├── scripts
+│   ├── share
+│   ├── sql-bench
+│   └── support-files
+└── php
+    ├── bin
+    ├── include
+    ├── lib
+    ├── php
+    └── var
+
+23 directories, 6 files
