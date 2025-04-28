@@ -1,0 +1,12 @@
+1. Use your virtual machine that is using the template "IT Unix 25 debian-12"
+2. Your task is to write an installation script for the LAMP stack (Linux, NGINX, MariaDB, PHP), learn to download source code, compile software on your machine and deploy software and related libraries in /opt/.  It is also important to download, compile and install in /opt/ all components of a LAMP stack (Linux, NGINX, MariaDB, PHP) on your Debian virtual machine without using any package managers for the installations.
+    1. The source code shall be placed in /opt/src/package-version  , where package-version is used to represent the software catalogue.
+    2. The installed binary shall be installed in the system /opt/ catalog and run as full services. It must run. That implies all the software must be configured to work with each other: nginx must serve the HTML and PHP pages, and php interpretation shall include MariaDB database connectivity modules. 
+    3. MariaDB must run and have user: dbadmin with password set to Unix2025 with granted access to access from a remote  host IP address 10.1.0.73. 
+    4. PHP shall load the module to access mariaDB
+    5. /var/www/html/ shall contain info.php with the content <?php phpinfo(); ?> and the page shall be accessible over HTTP://localhost/info.php
+3. Please write your automated script lamp_install.sh as bash script (that repeats full download, extract, compilation, installation, configuration and start) to deploy this stack and test its components to ensure they work. Shell script initially shall be deployed from git on a fresh machine and do intelligent checks and necessary package installation and compilations.
+4. Create at HTTP://git.mif.vu.lt the repository named Unix25Task2 with your lamp_install.sh and document.md files. Delivery of repositories with names that do not match will be discarded and yield 0.
+5. Share your git repository no later than one week to the deadline (i.e. May 2nd)
+6. Document your actions/challenges in a .md (markdown syntax - same as used on mif git) file in the git repository, which would be shared with course professors.
+7. Share the Result for validation is of GIT repo with script, document.md VM with and git repo with an installation script.

@@ -1,0 +1,5 @@
+1. Use your virtual machine that is using template "IT Unix 24 debian-12"
+2. Your task is to write installation script for LAMP stack (Linux, Apache, MariaDB, PHP) learn download source code, compile software on your machine and deploy software and related libraries in /opt/.  It is also important to download, compile and install in /opt/ all components of a LAMP stack (Linux, Apache, MariaDB, PHP) on your Debian virtual machine without using any package managers for the installations.
+3. Write your own automated script lamp_install.sh as bash script (that repeats full download, extract, compilation, installation, configuration and start) to deploy this stack and test its components to ensure they work. Shell script initially shall be deployed from git on fresh machine and do intelligent checks and necessary package instalation and compilations.
+4. Document your actions/challenges in .md (markdown syntax - same as used on mif git) file in git repository which would be shared to course professors.
+5. Result for validation of GIT repo with script, document.md VM with and git repo with installation script. Repository name Task2.
