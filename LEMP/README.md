@@ -1,6 +1,6 @@
 Script downloads LEMP stack from source code (~~Linux~~, NGINX, MariaDB, PHP)
 
-Does downloading, extracting, configuring, compiling installing and testing.
+Does downloading, extracting, compiling, installing, configuring, starting and testing.
 
 Saved in /opt/
 
