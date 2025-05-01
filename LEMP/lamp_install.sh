@@ -67,7 +67,7 @@ sudo groupadd -f mysql
 sudo useradd -g mysql mysql
 sudo chown -R mysql:mysql "${install_dir}/mariadb"
 
-cat <<EOF | sudo tee "${install_dir}/mariadb/my.cnf"
+cat <<EOF > "${install_dir}/mariadb/my.cnf"
 [mysqld]
 basedir=${install_dir}/mariadb
 datadir=${install_dir}/mariadb/data
@@ -168,9 +168,51 @@ sudo make -j4
 sudo make -j4 install
 cd "$start_dir"
 
-sed -i 's|root[[:space:]]\+html;|root   /var/www/html;|' "${install_dir}/nginx/conf/nginx.conf"
-sudo mkdir -p /var/www/html
-echo "<h1>Hello world</h1>" | sudo tee /var/www/html/index.html
-echo "<?php phpinfo(); ?>" | sudo tee /var/www/html/info.php
+mkdir -p /var/www/html
+echo "<h1>Hello world</h1>" > /var/www/html/index.html
+echo "<?php phpinfo(); ?>" > /var/www/html/info.php
 
-sudo "${install_dir}/nginx/sbin/nginx"
+cat <<EOF > "${install_dir}/nginx/conf/nginx.conf"
+worker_processes  1;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       ${install_dir}/nginx/conf/mime.types;
+    default_type  application/octet-stream;
+
+    sendfile        on;
+    keepalive_timeout  65;
+
+    server {
+        listen       80;
+        server_name  localhost;
+
+        location / {
+            root   /var/www/html;
+            index  index.php index.html index.htm;
+        }
+
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   /var/www/html;
+        }
+
+        location ~ \.php$ {
+            root           /var/www/html;
+            fastcgi_pass   127.0.0.1:9000;
+            fastcgi_index  index.php;
+            fastcgi_param  SCRIPT_FILENAME  \$document_root\$fastcgi_script_name;
+            include        fastcgi_params;
+        }
+
+        location ~ /\.ht {
+            deny  all;
+        }
+    }
+}
+EOF
+
+"${install_dir}/nginx/sbin/nginx"
