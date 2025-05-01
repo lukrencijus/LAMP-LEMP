@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+if [[ "$EUID" -ne 0 ]]; then
+  echo "This script must be run as root (use sudo)" >&2
+  exit 1
+fi
+
 set -e
 
 pcre_version="10.45"
@@ -20,27 +25,14 @@ install_dir="/opt"
 sudo mkdir -p "${install_dir}/src"
 sudo chown "$(whoami):$(whoami)" "${install_dir}/src"
 
-# Need to use sudo less:
-
-# check_root() {
-#     if [ "$(id -u)" -ne 0 ]; then
-#         echo "This script must be run as root" >&2
-#         exit 1
-#     fi
-# }
-
-# If you run the script twice, groupadd and useradd will fail.
+# Need to use sudo less
 
 # maybe actually let's use wget and tar flags to do intelligent checks
 
 # script needs to install software with dependencies libraries compiled from the source also
 # maybe add others libs for php and mariadb
 
-# look into how to create a mariadb user and group
-
-# make long lines easier to read with \
-
-# add as services
+# add as services, run as services
 
 sudo apt-get update
 sudo apt-get upgrade -y
@@ -63,11 +55,11 @@ sudo cmake --install .
 cd "$start_dir"
 
 mkdir -p "${install_dir}/mariadb/data"
-sudo groupadd -f mysql
-sudo useradd -g mysql mysql
+sudo groupadd --system --force mysql
+id -u mysql &>/dev/null || sudo useradd --system --no-create-home --shell /usr/sbin/nologin --gid mysql mysql
 sudo chown -R mysql:mysql "${install_dir}/mariadb"
 
-cat <<EOF > "${install_dir}/mariadb/my.cnf"
+cat <<EOF | sudo tee "${install_dir}/mariadb/my.cnf"
 [mysqld]
 basedir=${install_dir}/mariadb
 datadir=${install_dir}/mariadb/data
@@ -81,12 +73,9 @@ sudo "${install_dir}/mariadb/scripts/mariadb-install-db" \
   --defaults-file="${install_dir}/mariadb/my.cnf" \
   --user=mysql
 
-sleep 5
-
 sudo "${install_dir}/mariadb/bin/mariadbd-safe" \
   --defaults-file="${install_dir}/mariadb/my.cnf" \
   --user=mysql &
-
 sleep 5
 
 sudo "${install_dir}/mariadb/bin/mysql" -u root -S "${install_dir}/mariadb/data/mysql.sock" <<EOF
@@ -103,14 +92,14 @@ wget "https://www.php.net/distributions/php-${php_version}.tar.gz"
 tar -zxf "php-${php_version}.tar.gz"
 cd "php-${php_version}"
 sudo ./configure \
-    --prefix="${install_dir}/php" \
-    --with-fpm-user=www-data \
-    --with-fpm-group=www-data \
-    --enable-fpm \
-    --with-mysqli=mysqlnd \
-    --with-pdo-mysql=mysqlnd \
-    --enable-mbstring \
-    --enable-opcache
+  --prefix="${install_dir}/php" \
+  --with-fpm-user=www-data \
+  --with-fpm-group=www-data \
+  --enable-fpm \
+  --with-mysqli=mysqlnd \
+  --with-pdo-mysql=mysqlnd \
+  --enable-mbstring \
+  --enable-opcache
 sudo make -j4
 sudo make -j4 install
 
@@ -147,32 +136,33 @@ wget "https://github.com/nginx/nginx/releases/download/release-${nginx_version}/
 tar -zxf "nginx-${nginx_version}.tar.gz"
 cd "nginx-${nginx_version}"
 
-sudo groupadd --system nginx
-sudo useradd --system --no-create-home --shell /bin/false -g nginx nginx
+sudo groupadd --system --force nginx
+id -u nginx &>/dev/null || sudo useradd --system --no-create-home --shell /usr/sbin/nologin --gid nginx nginx
 
 ./configure \
-    --prefix="${install_dir}/nginx" \
-    --user=nginx \
-    --group=nginx \
-    --with-threads \
-    --with-file-aio \
-    --with-http_ssl_module \
-    --with-http_v2_module \
-    --with-http_gzip_static_module \
-    --with-http_stub_status_module \
-    --with-pcre="${install_dir}/src/pcre2-${pcre_version}" \
-    --with-pcre-jit \
-    --with-zlib="${install_dir}/src/zlib-${zlib_version}" \
-    --with-openssl="${install_dir}/src/openssl-${openssl_version}"
+  --prefix="${install_dir}/nginx" \
+  --user=nginx \
+  --group=nginx \
+  --with-threads \
+  --with-file-aio \
+  --with-http_ssl_module \
+  --with-http_v2_module \
+  --with-http_gzip_static_module \
+  --with-http_stub_status_module \
+  --with-pcre="${install_dir}/src/pcre2-${pcre_version}" \
+  --with-pcre-jit \
+  --with-zlib="${install_dir}/src/zlib-${zlib_version}" \
+  --with-openssl="${install_dir}/src/openssl-${openssl_version}"
 sudo make -j4
 sudo make -j4 install
 cd "$start_dir"
 
 mkdir -p /var/www/html
-echo "<h1>Hello world</h1>" > /var/www/html/index.html
+# maybe need to add tee here
+#echo "<h1>Hello world</h1>" > /var/www/html/index.html
 echo "<?php phpinfo(); ?>" > /var/www/html/info.php
 
-cat <<EOF > "${install_dir}/nginx/conf/nginx.conf"
+cat <<EOF | sudo tee "${install_dir}/nginx/conf/nginx.conf"
 worker_processes  1;
 
 events {
