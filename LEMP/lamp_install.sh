@@ -23,42 +23,42 @@ nginx_version="1.28.0"
 start_dir="$(pwd)"
 install_dir="/opt"
 
-sudo mkdir -p "${install_dir}/src"
-sudo chown "$(whoami):$(whoami)" "${install_dir}/src"
+mkdir -p "${install_dir}/src"
+chown "$(whoami):$(whoami)" "${install_dir}/src"
 
-sudo apt-get update
-sudo apt-get upgrade -y
-sudo apt-get install -y build-essential wget curl git tar cmake coreutils ccache sudo
+apt-get update
+apt-get upgrade -y
+apt-get install -y build-essential wget curl git tar cmake coreutils ccache sudo
 
 # For MariaDB
-sudo apt-get install -y libncurses5-dev libncursesw5-dev libgnutls28-dev libbison-dev bison libssl-dev
+apt-get install -y libncurses5-dev libncursesw5-dev libgnutls28-dev libbison-dev bison libssl-dev
 # For PHP
-sudo apt-get install -y libsqlite3-dev libonig-dev pkg-config libxml2-dev zlib1g-dev libtool-bin
+apt-get install -y libsqlite3-dev libonig-dev pkg-config libxml2-dev zlib1g-dev libtool-bin
 
 # 0. Dependencies
 cd "${install_dir}/src"
 wget -nc "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${pcre_version}/pcre2-${pcre_version}.tar.gz"
 tar -zxf "pcre2-${pcre_version}.tar.gz"
 cd "pcre2-${pcre_version}"
-sudo ./configure --prefix="${install_dir}/pcre"
-sudo make -j4
-sudo make -j4 install
+./configure --prefix="${install_dir}/pcre"
+make -j4
+make -j4 install
 
 cd "${install_dir}/src"
 wget -nc "https://github.com/madler/zlib/releases/download/v${zlib_version}/zlib-${zlib_version}.tar.gz"
 tar -zxf "zlib-${zlib_version}.tar.gz"
 cd "zlib-${zlib_version}"
-sudo ./configure --prefix="${install_dir}/zlib"
-sudo make -j4
-sudo make -j4 install
+./configure --prefix="${install_dir}/zlib"
+make -j4
+make -j4 install
 
 cd "${install_dir}/src"
 wget -nc "https://github.com/openssl/openssl/releases/download/openssl-${openssl_version}/openssl-${openssl_version}.tar.gz"
 tar -zxf "openssl-${openssl_version}.tar.gz"
 cd "openssl-${openssl_version}"
-sudo ./config --prefix="${install_dir}/openssl" --openssldir="${install_dir}/openssl"
-sudo make -j4
-sudo make -j4 install
+./config --prefix="${install_dir}/openssl" --openssldir="${install_dir}/openssl"
+make -j4
+make -j4 install
 
 
 
@@ -68,20 +68,20 @@ git clone --depth 1 --single-branch --branch "${mariadb_version}" https://github
 cd server
 mkdir build-mariadb-server-debug
 cd build-mariadb-server-debug
-sudo cmake .. \
+cmake .. \
   -DCMAKE_INSTALL_PREFIX="${install_dir}/mariadb" \
   -DWITH_SSL="${install_dir}/openssl" \
   -DZLIB_INCLUDE_DIR="${install_dir}/zlib/include" \
   -DZLIB_LIBRARY="${install_dir}/zlib/lib/libz.so"
-sudo cmake --build . --parallel 4
-sudo cmake --install .
+cmake --build . --parallel 4
+cmake --install .
 
 mkdir -p "${install_dir}/mariadb/data"
-sudo groupadd --system --force mysql
-id -u mysql &>/dev/null || sudo useradd --system --no-create-home --shell /usr/sbin/nologin --gid mysql mysql
-sudo chown -R mysql:mysql "${install_dir}/mariadb"
+groupadd --system --force mysql
+id -u mysql &>/dev/null || useradd --system --no-create-home --shell /usr/sbin/nologin --gid mysql mysql
+chown -R mysql:mysql "${install_dir}/mariadb"
 
-cat <<EOF | sudo tee "${install_dir}/mariadb/my.cnf"
+cat <<EOF | tee "${install_dir}/mariadb/my.cnf"
 [mysqld]
 basedir=${install_dir}/mariadb
 datadir=${install_dir}/mariadb/data
@@ -91,11 +91,11 @@ bind-address=0.0.0.0
 log-error=${install_dir}/mariadb/data/mariadb.err
 EOF
 
-sudo "${install_dir}/mariadb/scripts/mariadb-install-db" \
+"${install_dir}/mariadb/scripts/mariadb-install-db" \
   --defaults-file="${install_dir}/mariadb/my.cnf" \
   --user=mysql
 
-sudo tee /etc/systemd/system/mariadb.service > /dev/null <<EOF
+tee /etc/systemd/system/mariadb.service > /dev/null <<EOF
 [Unit]
 Description=MariaDB
 After=network.target
@@ -115,12 +115,12 @@ LimitNOFILE=4096
 WantedBy=multi-user.target
 EOF
 
-sudo systemctl daemon-reload
-sudo systemctl enable mariadb
-sudo systemctl start mariadb
+systemctl daemon-reload
+systemctl enable mariadb
+systemctl start mariadb
 sleep 5
 
-sudo "${install_dir}/mariadb/bin/mysql" -u root -S "${install_dir}/mariadb/data/mysql.sock" <<EOF
+"${install_dir}/mariadb/bin/mysql" -u root -S "${install_dir}/mariadb/data/mysql.sock" <<EOF
 CREATE USER IF NOT EXISTS '${db_user}'@'${remote_ip}' IDENTIFIED BY '${db_pass}';
 GRANT ALL PRIVILEGES ON *.* TO '${db_user}'@'${remote_ip}' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
@@ -137,7 +137,7 @@ export PKG_CONFIG_PATH="${install_dir}/openssl/lib/pkgconfig:${install_dir}/zlib
 export LD_LIBRARY_PATH="${install_dir}/openssl/lib:${install_dir}/zlib/lib:$LD_LIBRARY_PATH"
 export CFLAGS="-I${install_dir}/openssl/include -I${install_dir}/zlib/include $CFLAGS"
 export LDFLAGS="-L${install_dir}/openssl/lib -L${install_dir}/zlib/lib $LDFLAGS"
-sudo ./configure \
+./configure \
   --prefix="${install_dir}/php" \
   --with-fpm-user=www-data \
   --with-fpm-group=www-data \
@@ -148,14 +148,14 @@ sudo ./configure \
   --enable-opcache \
   --with-openssl \
   --with-zlib
-sudo make -j4
-sudo make -j4 install
+make -j4
+make -j4 install
 
 cp php.ini-production "${install_dir}/php/lib/php.ini"
 cp "${install_dir}/php/etc/php-fpm.conf.default" "${install_dir}/php/etc/php-fpm.conf"
 cp "${install_dir}/php/etc/php-fpm.d/www.conf.default" "${install_dir}/php/etc/php-fpm.d/www.conf"
 
-sudo tee /etc/systemd/system/php-fpm.service > /dev/null <<EOF
+tee /etc/systemd/system/php-fpm.service > /dev/null <<EOF
 [Unit]
 Description=PHP
 After=network.target
@@ -172,9 +172,9 @@ Restart=on-failure
 WantedBy=multi-user.target
 EOF
 
-sudo systemctl daemon-reload
-sudo systemctl enable php-fpm
-sudo systemctl start php-fpm
+systemctl daemon-reload
+systemctl enable php-fpm
+systemctl start php-fpm
 
 
 
@@ -184,8 +184,8 @@ wget -nc "https://github.com/nginx/nginx/releases/download/release-${nginx_versi
 tar -zxf "nginx-${nginx_version}.tar.gz"
 cd "nginx-${nginx_version}"
 
-sudo groupadd --system --force nginx
-id -u nginx &>/dev/null || sudo useradd --system --no-create-home --shell /usr/sbin/nologin --gid nginx nginx
+groupadd --system --force nginx
+id -u nginx &>/dev/null || useradd --system --no-create-home --shell /usr/sbin/nologin --gid nginx nginx
 
 ./configure \
   --prefix="${install_dir}/nginx" \
@@ -201,13 +201,13 @@ id -u nginx &>/dev/null || sudo useradd --system --no-create-home --shell /usr/s
   --with-pcre-jit \
   --with-zlib="${install_dir}/src/zlib-${zlib_version}" \
   --with-openssl="${install_dir}/src/openssl-${openssl_version}"
-sudo make -j4
-sudo make -j4 install
+make -j4
+make -j4 install
 
 mkdir -p /var/www/html
 echo "<?php phpinfo(); ?>" > /var/www/html/info.php
 
-cat <<EOF | sudo tee "${install_dir}/nginx/conf/nginx.conf"
+cat <<EOF | tee "${install_dir}/nginx/conf/nginx.conf"
 worker_processes  1;
 
 events {
@@ -250,7 +250,7 @@ http {
 }
 EOF
 
-sudo tee /etc/systemd/system/nginx.service > /dev/null <<EOF
+tee /etc/systemd/system/nginx.service > /dev/null <<EOF
 [Unit]
 Description=The NGINX HTTP and reverse proxy server
 After=network.target
@@ -270,12 +270,12 @@ Restart=on-failure
 WantedBy=multi-user.target
 EOF
 
-sudo systemctl daemon-reload
-sudo systemctl enable nginx
-sudo systemctl start nginx
+systemctl daemon-reload
+systemctl enable nginx
+systemctl start nginx
 
 
-sudo systemctl status mariadb
-sudo systemctl status php-fpm
-sudo systemctl status nginx
+systemctl status mariadb
+systemctl status php-fpm
+systemctl status nginx
 curl localhost/info.php
