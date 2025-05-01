@@ -10,7 +10,6 @@ set -e
 pcre_version="10.45"
 zlib_version="1.3.1"
 openssl_version="3.5.0"
-nginx_version="1.28.0"
 
 mariadb_version="10.11"
 remote_ip="10.1.0.73"
@@ -19,6 +18,8 @@ db_pass="Unix2025"
 
 php_version="8.3.6"
 
+nginx_version="1.28.0"
+
 start_dir="$(pwd)"
 install_dir="/opt"
 
@@ -26,8 +27,6 @@ sudo mkdir -p "${install_dir}/src"
 sudo chown "$(whoami):$(whoami)" "${install_dir}/src"
 
 # Need to use sudo less
-
-# maybe actually let's use wget and tar flags to do intelligent checks
 
 # script needs to install software with dependencies libraries compiled from the source also
 # maybe add others libs for php and mariadb
@@ -43,16 +42,46 @@ sudo apt-get install -y libncurses5-dev libncursesw5-dev libgnutls28-dev libbiso
 # For PHP
 sudo apt-get install -y libsqlite3-dev libonig-dev pkg-config libxml2-dev zlib1g-dev libtool-bin
 
+# 0. Dependencies
+cd "${install_dir}/src"
+wget -nc "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${pcre_version}/pcre2-${pcre_version}.tar.gz"
+tar -zxf "pcre2-${pcre_version}.tar.gz"
+cd "pcre2-${pcre_version}"
+sudo ./configure --prefix="${install_dir}/pcre"
+sudo make -j4
+sudo make -j4 install
+
+cd "${install_dir}/src"
+wget -nc "https://github.com/madler/zlib/releases/download/v${zlib_version}/zlib-${zlib_version}.tar.gz"
+tar -zxf "zlib-${zlib_version}.tar.gz"
+cd "zlib-${zlib_version}"
+sudo ./configure --prefix="${install_dir}/zlib"
+sudo make -j4
+sudo make -j4 install
+
+cd "${install_dir}/src"
+wget -nc "https://github.com/openssl/openssl/releases/download/openssl-${openssl_version}/openssl-${openssl_version}.tar.gz"
+tar -zxf "openssl-${openssl_version}.tar.gz"
+cd "openssl-${openssl_version}"
+sudo ./config --prefix="${install_dir}/openssl" --openssldir="${install_dir}/openssl"
+sudo make -j4
+sudo make -j4 install
+
+
+
 # 1. MariaDB
 cd "${install_dir}/src"
 git clone --depth 1 --single-branch --branch "${mariadb_version}" https://github.com/MariaDB/server.git
 cd server
 mkdir build-mariadb-server-debug
 cd build-mariadb-server-debug
-sudo cmake .. -DCMAKE_INSTALL_PREFIX="${install_dir}/mariadb"
+sudo cmake .. \
+  -DCMAKE_INSTALL_PREFIX="${install_dir}/mariadb" \
+  -DWITH_SSL="${install_dir}/openssl" \
+  -DZLIB_INCLUDE_DIR="${install_dir}/zlib/include" \
+  -DZLIB_LIBRARY="${install_dir}/zlib/lib/libz.so"
 sudo cmake --build . --parallel 4
 sudo cmake --install .
-cd "$start_dir"
 
 mkdir -p "${install_dir}/mariadb/data"
 sudo groupadd --system --force mysql
@@ -88,9 +117,13 @@ EOF
 
 # 2. PHP
 cd "${install_dir}/src"
-wget "https://www.php.net/distributions/php-${php_version}.tar.gz"
+wget -nc "https://www.php.net/distributions/php-${php_version}.tar.gz"
 tar -zxf "php-${php_version}.tar.gz"
 cd "php-${php_version}"
+export PKG_CONFIG_PATH="${install_dir}/openssl/lib/pkgconfig:${install_dir}/zlib/lib/pkgconfig:$PKG_CONFIG_PATH"
+export LD_LIBRARY_PATH="${install_dir}/openssl/lib:${install_dir}/zlib/lib:$LD_LIBRARY_PATH"
+export CFLAGS="-I${install_dir}/openssl/include -I${install_dir}/zlib/include $CFLAGS"
+export LDFLAGS="-L${install_dir}/openssl/lib -L${install_dir}/zlib/lib $LDFLAGS"
 sudo ./configure \
   --prefix="${install_dir}/php" \
   --with-fpm-user=www-data \
@@ -99,7 +132,9 @@ sudo ./configure \
   --with-mysqli=mysqlnd \
   --with-pdo-mysql=mysqlnd \
   --enable-mbstring \
-  --enable-opcache
+  --enable-opcache \
+  --with-openssl \
+  --with-zlib
 sudo make -j4
 sudo make -j4 install
 
@@ -112,27 +147,8 @@ sudo "${install_dir}/php/sbin/php-fpm"
 
 
 # 3. NGINX
-# Required by the NGINX Core and Rewrite modules
 cd "${install_dir}/src"
-wget "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${pcre_version}/pcre2-${pcre_version}.tar.gz"
-tar -zxf "pcre2-${pcre_version}.tar.gz"
-cd "$start_dir"
-
-# Required by the NGINX Gzip module
-cd "${install_dir}/src"
-wget "https://github.com/madler/zlib/releases/download/v${zlib_version}/zlib-${zlib_version}.tar.gz"
-tar -zxf "zlib-${zlib_version}.tar.gz"
-cd "$start_dir"
-
-# Required by the NGINX SSL module and others
-cd "${install_dir}/src"
-wget "https://github.com/openssl/openssl/releases/download/openssl-${openssl_version}/openssl-${openssl_version}.tar.gz"
-tar -zxf "openssl-${openssl_version}.tar.gz"
-cd "$start_dir"
-
-# NGINX
-cd "${install_dir}/src"
-wget "https://github.com/nginx/nginx/releases/download/release-${nginx_version}/nginx-${nginx_version}.tar.gz"
+wget -nc "https://github.com/nginx/nginx/releases/download/release-${nginx_version}/nginx-${nginx_version}.tar.gz"
 tar -zxf "nginx-${nginx_version}.tar.gz"
 cd "nginx-${nginx_version}"
 
@@ -155,11 +171,10 @@ id -u nginx &>/dev/null || sudo useradd --system --no-create-home --shell /usr/s
   --with-openssl="${install_dir}/src/openssl-${openssl_version}"
 sudo make -j4
 sudo make -j4 install
-cd "$start_dir"
 
 mkdir -p /var/www/html
 # maybe need to add tee here
-#echo "<h1>Hello world</h1>" > /var/www/html/index.html
+# echo "<h1>Hello world</h1>" > /var/www/html/index.html
 echo "<?php phpinfo(); ?>" > /var/www/html/info.php
 
 cat <<EOF | sudo tee "${install_dir}/nginx/conf/nginx.conf"
@@ -205,4 +220,4 @@ http {
 }
 EOF
 
-"${install_dir}/nginx/sbin/nginx"
+sudo "${install_dir}/nginx/sbin/nginx"
