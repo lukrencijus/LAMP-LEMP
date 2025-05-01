@@ -28,6 +28,8 @@ https://mariadb.com/kb/en/configuring-mariadb-for-remote-client-access/
 
 # php
 
+There are guides how to make php work with nginx but they do not tell you how to write it inside a script
+
 https://github.com/binarweb/Install-PHP-FPM-7.3-from-source-on-Ubuntu-16.04?tab=readme-ov-file
 
 https://linuxadmin.io/php-fpm-php7-source/
@@ -39,5 +41,3 @@ https://php.watch/articles/compile-php-ubuntu
 https://www.php.net/manual/en/install.unix.nginx.php
 
 https://www.tutorials24x7.com/php/how-to-install-php-8-from-source-on-ubuntu-2004-lts
-
-https://docs.moodle.org/500/en/Compiling_PHP_from_source
