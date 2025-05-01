@@ -1,11 +1,19 @@
 #!/usr/bin/env bash
 
 if [[ "$EUID" -ne 0 ]]; then
-  echo "This script must be run as root (use sudo)" >&2
+  echo "This script must be run as root (sudo $0)" >&2
   exit 1
 fi
 
 set -e
+
+# is www user created
+# maybe other libs also install
+# meaning of service files
+# install tee and sed
+# remove cat from nginx
+#  > /dev/null remove from php and nginx maybe
+# maybe it would make sence to change the owner of each lamp part to it's owner? not just one folder?
 
 pcre_version="10.45"
 zlib_version="1.3.1"
@@ -81,7 +89,7 @@ groupadd --system --force mysql
 id -u mysql &>/dev/null || useradd --system --no-create-home --shell /usr/sbin/nologin --gid mysql mysql
 chown -R mysql:mysql "${install_dir}/mariadb"
 
-cat <<EOF | tee "${install_dir}/mariadb/my.cnf"
+tee "${install_dir}/mariadb/my.cnf" <<EOF
 [mysqld]
 basedir=${install_dir}/mariadb
 datadir=${install_dir}/mariadb/data
@@ -95,13 +103,13 @@ EOF
   --defaults-file="${install_dir}/mariadb/my.cnf" \
   --user=mysql
 
-tee /etc/systemd/system/mariadb.service > /dev/null <<EOF
+tee /etc/systemd/system/mariadb.service <<EOF
 [Unit]
 Description=MariaDB
 After=network.target
 
 [Service]
-Type=forking
+Type=simple
 User=mysql
 Group=mysql
 ExecStart=${install_dir}/mariadb/bin/mariadbd-safe --defaults-file=${install_dir}/mariadb/my.cnf --user=mysql
@@ -155,6 +163,9 @@ cp php.ini-production "${install_dir}/php/lib/php.ini"
 cp "${install_dir}/php/etc/php-fpm.conf.default" "${install_dir}/php/etc/php-fpm.conf"
 cp "${install_dir}/php/etc/php-fpm.d/www.conf.default" "${install_dir}/php/etc/php-fpm.d/www.conf"
 
+mkdir -p "${install_dir}/php/var/run"
+chown -R www-data:www-data "${install_dir}/php/var"
+
 tee /etc/systemd/system/php-fpm.service > /dev/null <<EOF
 [Unit]
 Description=PHP
@@ -167,6 +178,7 @@ ExecReload=/bin/kill -USR2 \$MAINPID
 User=www-data
 Group=www-data
 Restart=on-failure
+Environment="LD_LIBRARY_PATH=${install_dir}/openssl/lib:${install_dir}/zlib/lib"
 
 [Install]
 WantedBy=multi-user.target
@@ -207,8 +219,14 @@ make -j4 install
 mkdir -p /var/www/html
 echo "<?php phpinfo(); ?>" > /var/www/html/info.php
 
+mkdir -p "${install_dir}/nginx/run"
+mkdir -p "${install_dir}/nginx/logs"
+chown -R nginx:nginx "${install_dir}/nginx"
+
 cat <<EOF | tee "${install_dir}/nginx/conf/nginx.conf"
+user  nginx;
 worker_processes  1;
+pid ${install_dir}/nginx/logs/nginx.pid;
 
 events {
     worker_connections  1024;
@@ -218,6 +236,9 @@ http {
     include       ${install_dir}/nginx/conf/mime.types;
     default_type  application/octet-stream;
 
+    access_log  ${install_dir}/nginx/logs/access.log;
+    error_log   ${install_dir}/nginx/logs/error.log;
+
     sendfile        on;
     keepalive_timeout  65;
 
@@ -225,9 +246,11 @@ http {
         listen       80;
         server_name  localhost;
 
+        root   /var/www/html;
+        index  index.php index.html index.htm;
+
         location / {
-            root   /var/www/html;
-            index  index.php index.html index.htm;
+            try_files \$uri \$uri/ =404;
         }
 
         error_page   500 502 503 504  /50x.html;
@@ -236,7 +259,6 @@ http {
         }
 
         location ~ \.php$ {
-            root           /var/www/html;
             fastcgi_pass   127.0.0.1:9000;
             fastcgi_index  index.php;
             fastcgi_param  SCRIPT_FILENAME  \$document_root\$fastcgi_script_name;
@@ -262,8 +284,6 @@ ExecStartPre=${install_dir}/nginx/sbin/nginx -t -c ${install_dir}/nginx/conf/ngi
 ExecStart=${install_dir}/nginx/sbin/nginx -c ${install_dir}/nginx/conf/nginx.conf
 ExecReload=${install_dir}/nginx/sbin/nginx -s reload
 ExecStop=${install_dir}/nginx/sbin/nginx -s quit
-User=nginx
-Group=nginx
 Restart=on-failure
 
 [Install]
@@ -274,8 +294,7 @@ systemctl daemon-reload
 systemctl enable nginx
 systemctl start nginx
 
-
-systemctl status mariadb
-systemctl status php-fpm
-systemctl status nginx
 curl localhost/info.php
+systemctl status mariadb --no-pager
+systemctl status php-fpm --no-pager
+systemctl status nginx --no-pager
