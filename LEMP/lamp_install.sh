@@ -26,16 +26,9 @@ install_dir="/opt"
 sudo mkdir -p "${install_dir}/src"
 sudo chown "$(whoami):$(whoami)" "${install_dir}/src"
 
-# Need to use sudo less
-
-# script needs to install software with dependencies libraries compiled from the source also
-# maybe add others libs for php and mariadb
-
-# add as services, run as services
-
 sudo apt-get update
 sudo apt-get upgrade -y
-sudo apt-get install -y build-essential wget curl git tar cmake coreutils ccache
+sudo apt-get install -y build-essential wget curl git tar cmake coreutils ccache sudo
 
 # For MariaDB
 sudo apt-get install -y libncurses5-dev libncursesw5-dev libgnutls28-dev libbison-dev bison libssl-dev
@@ -102,9 +95,29 @@ sudo "${install_dir}/mariadb/scripts/mariadb-install-db" \
   --defaults-file="${install_dir}/mariadb/my.cnf" \
   --user=mysql
 
-sudo "${install_dir}/mariadb/bin/mariadbd-safe" \
-  --defaults-file="${install_dir}/mariadb/my.cnf" \
-  --user=mysql &
+sudo tee /etc/systemd/system/mariadb.service > /dev/null <<EOF
+[Unit]
+Description=MariaDB
+After=network.target
+
+[Service]
+Type=forking
+User=mysql
+Group=mysql
+ExecStart=${install_dir}/mariadb/bin/mariadbd-safe --defaults-file=${install_dir}/mariadb/my.cnf --user=mysql
+ExecStop=${install_dir}/mariadb/bin/mysqladmin --defaults-file=${install_dir}/mariadb/my.cnf --user=root --socket=${install_dir}/mariadb/data/mysql.sock shutdown
+PIDFile=${install_dir}/mariadb/data/mariadb.pid
+TimeoutSec=300
+Restart=on-failure
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable mariadb
+sudo systemctl start mariadb
 sleep 5
 
 sudo "${install_dir}/mariadb/bin/mysql" -u root -S "${install_dir}/mariadb/data/mysql.sock" <<EOF
@@ -142,7 +155,26 @@ cp php.ini-production "${install_dir}/php/lib/php.ini"
 cp "${install_dir}/php/etc/php-fpm.conf.default" "${install_dir}/php/etc/php-fpm.conf"
 cp "${install_dir}/php/etc/php-fpm.d/www.conf.default" "${install_dir}/php/etc/php-fpm.d/www.conf"
 
-sudo "${install_dir}/php/sbin/php-fpm"
+sudo tee /etc/systemd/system/php-fpm.service > /dev/null <<EOF
+[Unit]
+Description=PHP
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=${install_dir}/php/sbin/php-fpm --nodaemonize --fpm-config ${install_dir}/php/etc/php-fpm.conf
+ExecReload=/bin/kill -USR2 \$MAINPID
+User=www-data
+Group=www-data
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable php-fpm
+sudo systemctl start php-fpm
 
 
 
@@ -173,8 +205,6 @@ sudo make -j4
 sudo make -j4 install
 
 mkdir -p /var/www/html
-# maybe need to add tee here
-# echo "<h1>Hello world</h1>" > /var/www/html/index.html
 echo "<?php phpinfo(); ?>" > /var/www/html/info.php
 
 cat <<EOF | sudo tee "${install_dir}/nginx/conf/nginx.conf"
@@ -220,4 +250,32 @@ http {
 }
 EOF
 
-sudo "${install_dir}/nginx/sbin/nginx"
+sudo tee /etc/systemd/system/nginx.service > /dev/null <<EOF
+[Unit]
+Description=The NGINX HTTP and reverse proxy server
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=${install_dir}/nginx/logs/nginx.pid
+ExecStartPre=${install_dir}/nginx/sbin/nginx -t -c ${install_dir}/nginx/conf/nginx.conf
+ExecStart=${install_dir}/nginx/sbin/nginx -c ${install_dir}/nginx/conf/nginx.conf
+ExecReload=${install_dir}/nginx/sbin/nginx -s reload
+ExecStop=${install_dir}/nginx/sbin/nginx -s quit
+User=nginx
+Group=nginx
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable nginx
+sudo systemctl start nginx
+
+
+sudo systemctl status mariadb
+sudo systemctl status php-fpm
+sudo systemctl status nginx
+curl localhost/info.php
