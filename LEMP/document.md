@@ -1,5 +1,7 @@
 # nginx
 
+I could not find systemd service file for NGINX in documentation so I used youtube
+
 https://nginx.org/en/docs/configure.html
 
 https://docs.nginx.com/nginx/admin-guide/installing-nginx/installing-nginx-open-source/
@@ -9,6 +11,8 @@ https://github.com/nginx/nginx?tab=readme-ov-file#building-from-source
 https://nginx.org/en/docs/configure.html
 
 https://docs.vultr.com/how-to-compile-nginx-from-source-on-debian-10
+
+https://youtube.com/watch?v=Ap_ZxQ0voqE
 
 # mariadb
 

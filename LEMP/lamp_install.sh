@@ -7,14 +7,6 @@ fi
 
 set -e
 
-# is www user created
-# maybe other libs also install
-# meaning of service files
-# install tee and sed
-# remove cat from nginx
-#  > /dev/null remove from php and nginx maybe
-# maybe it would make sence to change the owner of each lamp part to it's owner? not just one folder?
-
 pcre_version="10.45"
 zlib_version="1.3.1"
 openssl_version="3.5.0"
@@ -36,7 +28,7 @@ chown "$(whoami):$(whoami)" "${install_dir}/src"
 
 apt-get update
 apt-get upgrade -y
-apt-get install -y build-essential wget curl git tar cmake coreutils ccache sudo
+apt-get install -y build-essential wget curl git tar cmake coreutils ccache systemd passwd nano
 
 # For MariaDB
 apt-get install -y libncurses5-dev libncursesw5-dev libgnutls28-dev libbison-dev bison libssl-dev
@@ -86,7 +78,7 @@ cmake --install .
 
 mkdir -p "${install_dir}/mariadb/data"
 groupadd --system --force mysql
-id -u mysql &>/dev/null || useradd --system --no-create-home --shell /usr/sbin/nologin --gid mysql mysql
+id -u mysql || useradd --system --no-create-home --shell /usr/sbin/nologin --gid mysql mysql
 chown -R mysql:mysql "${install_dir}/mariadb"
 
 tee "${install_dir}/mariadb/my.cnf" <<EOF
@@ -163,10 +155,13 @@ cp php.ini-production "${install_dir}/php/lib/php.ini"
 cp "${install_dir}/php/etc/php-fpm.conf.default" "${install_dir}/php/etc/php-fpm.conf"
 cp "${install_dir}/php/etc/php-fpm.d/www.conf.default" "${install_dir}/php/etc/php-fpm.d/www.conf"
 
-mkdir -p "${install_dir}/php/var/run"
-chown -R www-data:www-data "${install_dir}/php/var"
+groupadd --system --force www-data
+id -u www-data || useradd --system --no-create-home --shell /usr/sbin/nologin --gid www-data www-data
 
-tee /etc/systemd/system/php-fpm.service > /dev/null <<EOF
+mkdir -p "${install_dir}/php/var/run"
+chown -R www-data:www-data "${install_dir}/php"
+
+tee /etc/systemd/system/php-fpm.service <<EOF
 [Unit]
 Description=PHP
 After=network.target
@@ -197,7 +192,7 @@ tar -zxf "nginx-${nginx_version}.tar.gz"
 cd "nginx-${nginx_version}"
 
 groupadd --system --force nginx
-id -u nginx &>/dev/null || useradd --system --no-create-home --shell /usr/sbin/nologin --gid nginx nginx
+id -u nginx || useradd --system --no-create-home --shell /usr/sbin/nologin --gid nginx nginx
 
 ./configure \
   --prefix="${install_dir}/nginx" \
@@ -223,7 +218,7 @@ mkdir -p "${install_dir}/nginx/run"
 mkdir -p "${install_dir}/nginx/logs"
 chown -R nginx:nginx "${install_dir}/nginx"
 
-cat <<EOF | tee "${install_dir}/nginx/conf/nginx.conf"
+tee "${install_dir}/nginx/conf/nginx.conf" <<EOF
 user  nginx;
 worker_processes  1;
 pid ${install_dir}/nginx/logs/nginx.pid;
@@ -272,7 +267,7 @@ http {
 }
 EOF
 
-tee /etc/systemd/system/nginx.service > /dev/null <<EOF
+tee /etc/systemd/system/nginx.service <<EOF
 [Unit]
 Description=The NGINX HTTP and reverse proxy server
 After=network.target
