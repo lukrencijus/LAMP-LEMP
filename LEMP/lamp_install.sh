@@ -20,7 +20,6 @@ php_version="8.3.6"
 
 nginx_version="1.28.0"
 
-start_dir="$(pwd)"
 install_dir="/opt"
 
 mkdir -p "${install_dir}/src"
@@ -79,7 +78,7 @@ cmake --install .
 mkdir -p "${install_dir}/mariadb/data"
 groupadd --system --force mysql
 id -u mysql || useradd --system --no-create-home --shell /usr/sbin/nologin --gid mysql mysql
-chown -R mysql:mysql "${install_dir}/mariadb"
+chown -R mysql:mysql "${install_dir}/mariadb/data"
 
 tee "${install_dir}/mariadb/my.cnf" <<EOF
 [mysqld]
@@ -159,7 +158,8 @@ groupadd --system --force www-data
 id -u www-data || useradd --system --no-create-home --shell /usr/sbin/nologin --gid www-data www-data
 
 mkdir -p "${install_dir}/php/var/run"
-chown -R www-data:www-data "${install_dir}/php"
+chown -R www-data:www-data "${install_dir}/php/var/run"
+chown -R www-data:www-data "${install_dir}/php/var/log"
 
 tee /etc/systemd/system/php-fpm.service <<EOF
 [Unit]
@@ -212,11 +212,13 @@ make -j4
 make -j4 install
 
 mkdir -p /var/www/html
+cp -r "${install_dir}/nginx/html/"* /var/www/html/
 echo "<?php phpinfo(); ?>" > /var/www/html/info.php
 
 mkdir -p "${install_dir}/nginx/run"
 mkdir -p "${install_dir}/nginx/logs"
-chown -R nginx:nginx "${install_dir}/nginx"
+chown -R nginx:nginx "${install_dir}/nginx/run"
+chown -R nginx:nginx "${install_dir}/nginx/logs"
 
 tee "${install_dir}/nginx/conf/nginx.conf" <<EOF
 user  nginx;

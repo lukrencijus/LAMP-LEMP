@@ -1,6 +1,10 @@
+It was hard to understand and troubleshoot missing permissions required for each service
+
+Could not find documentation on how to create a systemd service files
+
 # nginx
 
-I could not find systemd service file for NGINX in documentation so I used youtube
+Could not find documentation on how to create a systemd service file for NGINX. Had to rely on YouTube tutorial.
 
 https://nginx.org/en/docs/configure.html
 
@@ -16,7 +20,7 @@ https://youtube.com/watch?v=Ap_ZxQ0voqE
 
 # mariadb
 
-It was a challenge finding information for installing mariadb from source
+Finding information on installing MariaDB from source was difficult. Had to piece together the process from various sources.
 
 https://otland.net/threads/how-to-build-and-install-mariadb-from-source-and-how-to-secure-your-database.288895/
 
@@ -32,7 +36,7 @@ https://mariadb.com/kb/en/configuring-mariadb-for-remote-client-access/
 
 # php
 
-There are guides how to make php work with nginx but they do not tell you how to write it inside a script
+While there are many guides on configuring PHP to work with NGINX, they often do not explain how to automate the setup within a script.
 
 https://github.com/binarweb/Install-PHP-FPM-7.3-from-source-on-Ubuntu-16.04?tab=readme-ov-file
 
