@@ -117,7 +117,7 @@ EOF
 systemctl daemon-reload
 systemctl enable mariadb
 systemctl start mariadb
-sleep 5
+sleep 10
 
 "${install_dir}/mariadb/bin/mysql" -u root -S "${install_dir}/mariadb/data/mysql.sock" <<EOF
 CREATE USER IF NOT EXISTS '${db_user}'@'${remote_ip}' IDENTIFIED BY '${db_pass}';
